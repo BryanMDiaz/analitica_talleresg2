@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ===================================== -->
+    <!-- REPORTES DE VENTAS (ACCOUNT.MOVE)     -->
+    <!-- ===================================== -->
+
+    <!-- Vista Gráfico de Reportes de Ventas -->
+    <record id="view_taller_reportes_ventas_graph" model="ir.ui.view">
+        <field name="name">taller.reportes.ventas.graph</field>
+        <field name="model">account.move</field>
+        <field name="arch" type="xml">
+            <graph string="Reportes de Ventas - Taller" type="bar" sample="1">
+                <field name="invoice_date" interval="month"/>
+                <field name="taller_monto_mano_obra" type="measure"/>
+                <field name="taller_monto_repuestos" type="measure"/>
+                <field name="amount_total_signed" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Vista Pivote de Reportes de Ventas -->
+    <record id="view_taller_reportes_ventas_pivot" model="ir.ui.view">
+        <field name="name">taller.reportes.ventas.pivot</field>
+        <field name="model">account.move</field>
+        <field name="arch" type="xml">
+            <pivot string="Análisis de Ventas Taller" sample="1">
+                <field name="partner_id" type="row"/>
+                <field name="invoice_date" interval="month" type="col"/>
+                <field name="amount_untaxed_signed" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Vista Lista de Reportes de Ventas con Desglose Mano de Obra, Repuestos, Placa y Mecánico -->
+    <record id="view_taller_reportes_ventas_list" model="ir.ui.view">
+        <field name="name">taller.reportes.ventas.list</field>
+        <field name="model">account.move</field>
+        <field name="arch" type="xml">
+            <list string="Facturas de Venta - Taller" create="0" delete="0" default_order="invoice_date desc, id desc" sample="1">
+                <field name="company_currency_id" column_invisible="True"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="name" string="Número" readonly="1" decoration-bf="1"/>
+                <field name="invoice_date" string="Fecha"/>
+                <field name="partner_id" string="Cliente"/>
+                <field name="x_placa_vehiculo" string="Placa" decoration-bf="1" optional="show"/>
+                <field name="x_marca_vehiculo" string="Marca" optional="show"/>
+                <field name="x_modelo_vehiculo" string="Modelo" optional="hide"/>
+                <field name="mecanico_id" string="Mecánico Asignado" optional="show"/>
+                <field name="taller_monto_mano_obra" string="Mano de Obra" sum="Total Mano de Obra" widget="monetary" decoration-bf="1"/>
+                <field name="taller_monto_repuestos" string="Repuestos / Insumos" sum="Total Repuestos" widget="monetary" optional="show"/>
+                <field name="amount_untaxed_signed" string="Base Imponible" sum="Total Base" widget="monetary" optional="hide"/>
+                <field name="amount_total_signed" string="Total Facturado" sum="Total General" widget="monetary" decoration-bf="1"/>
+                <field name="payment_state" string="Estado de Pago" widget="badge" decoration-success="payment_state in ('paid', 'in_payment')" decoration-warning="payment_state == 'not_paid'"/>
+                <field name="state" string="Estado" widget="badge" decoration-success="state == 'posted'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vista Búsqueda / Filtros para Reportes de Ventas -->
+    <record id="view_taller_reportes_ventas_search" model="ir.ui.view">
+        <field name="name">taller.reportes.ventas.search</field>
+        <field name="model">account.move</field>
+        <field name="arch" type="xml">
+            <search string="Filtros Reportes de Ventas">
+                <field name="name" string="Número / Factura"/>
+                <field name="partner_id" string="Cliente"/>
+                <field name="x_placa_vehiculo" string="Placa de Vehículo"/>
+                <field name="mecanico_id" string="Mecánico Asignado"/>
+                <field name="x_marca_vehiculo" string="Marca"/>
+                <field name="invoice_user_id" string="Comercial"/>
+                <field name="amount_total_signed" string="Total (≥)" operator="&gt;="/>
+                <field name="amount_total_signed" string="Total (≤)" operator="&lt;="/>
+
+                <filter string="Solo Taller Automotriz" name="filter_taller" domain="[('es_taller', '=', True)]"/>
+                <filter string="Solo MasterShop (Herramientas)" name="filter_mastershop" domain="[('es_taller', '=', False)]"/>
+                <filter string="Todas las Ventas (Taller + MasterShop)" name="filter_todas_ventas" domain="['|', ('es_taller', '=', True), ('es_taller', '=', False)]"/>
+                <separator/>
+                <filter string="Con Mecánico Asignado" name="filter_has_mecanico" domain="[('mecanico_id', '!=', False)]"/>
+                <filter string="Con Placa Registrada" name="filter_has_placa" domain="[('x_placa_vehiculo', '!=', False), ('x_placa_vehiculo', '!=', '')]"/>
+                <separator/>
+                <filter string="Facturas" name="filter_invoices" domain="[('move_type', '=', 'out_invoice')]"/>
+                <filter string="Notas de Crédito" name="filter_refunds" domain="[('move_type', '=', 'out_refund')]"/>
+                <separator/>
+                <filter string="Pagadas" name="filter_paid" domain="[('payment_state', 'in', ('paid', 'in_payment'))]"/>
+                <filter string="Pendientes de Pago" name="filter_unpaid" domain="[('payment_state', '=', 'not_paid')]"/>
+                <separator/>
+                <filter string="Montos Grandes (≥ $1,000)" name="filter_amount_large" domain="[('amount_total_signed', '&gt;=', 1000)]"/>
+                <filter string="Montos Mayores (≥ $500)" name="filter_amount_500" domain="[('amount_total_signed', '&gt;=', 500)]"/>
+                <filter string="Montos Menores (&lt; $500)" name="filter_amount_below_500" domain="[('amount_total_signed', '&lt;', 500)]"/>
+                <filter string="Montos Menores (&lt; $100)" name="filter_amount_small" domain="[('amount_total_signed', '&lt;', 100)]"/>
+                <separator/>
+                <filter string="Año Actual" name="filter_current_year" domain="[('invoice_date', '&gt;=', context_today().strftime('%Y-01-01'))]"/>
+
+                <group expand="0" string="Agrupar Por">
+                    <filter string="Mecánico Asignado" name="group_mecanico" context="{'group_by': 'mecanico_id'}"/>
+                    <filter string="Placa / Vehículo" name="group_placa" context="{'group_by': 'x_placa_vehiculo'}"/>
+                    <filter string="Cliente" name="group_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Mes de Factura" name="group_month" context="{'group_by': 'invoice_date:month'}"/>
+                    <filter string="Marca" name="group_marca" context="{'group_by': 'x_marca_vehiculo'}"/>
+                    <filter string="Comercial" name="group_salesperson" context="{'group_by': 'invoice_user_id'}"/>
+                    <filter string="Estado de Pago" name="group_payment" context="{'group_by': 'payment_state'}"/>
+                    <filter string="Diario" name="group_journal" context="{'group_by': 'journal_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Acción de Ventana para Reportes de Ventas -->
+    <record id="action_taller_reportes_ventas" model="ir.actions.act_window">
+        <field name="name">Reportes de Ventas</field>
+        <field name="res_model">account.move</field>
+        <field name="view_mode">list,pivot,graph</field>
+        <field name="view_id" ref="view_taller_reportes_ventas_list"/>
+        <field name="search_view_id" ref="view_taller_reportes_ventas_search"/>
+        <field name="domain">[('move_type', 'in', ('out_invoice', 'out_refund')), ('state', '=', 'posted'), ('company_id.name', 'ilike', 'GRUPO 2'), ('es_taller', '=', True)]</field>
+        <field name="context">{'create': False, 'search_default_filter_invoices': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Aún no hay facturas de taller contabilizadas para generar reportes.
+            </p>
+        </field>
+    </record>
+
+    <!-- Vinculación de Vistas por Secuencia: 1. Lista, 2. Pivote, 3. Gráfico -->
+    <record id="action_taller_reportes_ventas_view_list" model="ir.actions.act_window.view">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_taller_reportes_ventas_list"/>
+        <field name="act_window_id" ref="action_taller_reportes_ventas"/>
+    </record>
+
+    <record id="action_taller_reportes_ventas_view_pivot" model="ir.actions.act_window.view">
+        <field name="sequence" eval="2"/>
+        <field name="view_mode">pivot</field>
+        <field name="view_id" ref="view_taller_reportes_ventas_pivot"/>
+        <field name="act_window_id" ref="action_taller_reportes_ventas"/>
+    </record>
+
+    <record id="action_taller_reportes_ventas_view_graph" model="ir.actions.act_window.view">
+        <field name="sequence" eval="3"/>
+        <field name="view_mode">graph</field>
+        <field name="view_id" ref="view_taller_reportes_ventas_graph"/>
+        <field name="act_window_id" ref="action_taller_reportes_ventas"/>
+    </record>
+</odoo>

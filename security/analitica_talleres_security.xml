@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Categoría de Seguridad -->
+        <record id="module_category_analitica_talleres" model="ir.module.category">
+            <field name="name">Analítica Talleres G2</field>
+            <field name="description">Control de acceso y permisos para el módulo Analítica Talleres G2</field>
+            <field name="sequence">50</field>
+        </record>
+
+        <!-- Grupo: Usuario -->
+        <record id="group_analitica_talleres_user" model="res.groups">
+            <field name="name">Usuario</field>
+            <field name="category_id" ref="module_category_analitica_talleres"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+        <!-- Grupo: Administrador -->
+        <record id="group_analitica_talleres_manager" model="res.groups">
+            <field name="name">Administrador</field>
+            <field name="category_id" ref="module_category_analitica_talleres"/>
+            <field name="implied_ids" eval="[(4, ref('group_analitica_talleres_user'))]"/>
+            <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+        </record>
+
+        <!-- Regla Multi-Compañía -->
+        <record id="rule_analitica_taller_company" model="ir.rule">
+            <field name="name">Analítica Taller: Regla Multi-Compañía</field>
+            <field name="model_id" ref="model_analitica_taller"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <!-- Regla Multi-Compañía: Bitácora de Vehículos -->
+        <record id="rule_taller_bitacora_vehiculo_company" model="ir.rule">
+            <field name="name">Bitácora Vehículos: Regla Multi-Compañía</field>
+            <field name="model_id" ref="model_taller_bitacora_vehiculo"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+    </data>
+</odoo>

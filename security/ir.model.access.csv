@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_analitica_taller_user,analitica.taller.user,model_analitica_taller,group_analitica_talleres_user,1,1,1,0
+access_analitica_taller_manager,analitica.taller.manager,model_analitica_taller,group_analitica_talleres_manager,1,1,1,1
+access_taller_bitacora_vehiculo_user,taller.bitacora.vehiculo.user,model_taller_bitacora_vehiculo,group_analitica_talleres_user,1,0,0,0
+access_taller_bitacora_vehiculo_manager,taller.bitacora.vehiculo.manager,model_taller_bitacora_vehiculo,group_analitica_talleres_manager,1,0,0,0
+access_taller_bitacora_vehiculo_base,taller.bitacora.vehiculo.base,model_taller_bitacora_vehiculo,base.group_user,1,0,0,0
+access_taller_seleccionar_vehiculo_wizard_user,taller.seleccionar.vehiculo.wizard.user,model_taller_seleccionar_vehiculo_wizard,base.group_user,1,1,1,1
+access_taller_seleccionar_vehiculo_wizard_line_user,taller.seleccionar.vehiculo.wizard.line.user,model_taller_seleccionar_vehiculo_wizard_line,base.group_user,1,1,1,1

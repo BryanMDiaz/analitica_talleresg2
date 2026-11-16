@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_taller_seleccionar_vehiculo_wizard_form" model="ir.ui.view">
+        <field name="name">taller.seleccionar.vehiculo.wizard.form</field>
+        <field name="model">taller.seleccionar.vehiculo.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Vehículos del Cliente">
+                <div class="alert alert-info d-flex align-items-center mb-3 py-2" role="alert">
+                    <span class="fa fa-info-circle fa-2x me-3 text-info"/>
+                    <div>
+                        Vehículos registrados previamente en el taller para <strong><field name="partner_id" readonly="1" options="{'no_open': True}" class="d-inline"/></strong>.
+                        <br/>
+                        <small class="text-muted">Haga clic en <strong>Seleccionar</strong> en el vehículo deseado para completar automáticamente sus datos (marca, modelo, año, tipo, chasis, motor y VIN).</small>
+                    </div>
+                </div>
+
+                <!-- Sección de Búsqueda por Placa -->
+                <div class="d-flex align-items-center gap-2 mb-3 p-2 bg-light rounded border">
+                    <div class="flex-grow-1">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="fa fa-search text-primary"/>
+                            </span>
+                            <field name="filtro_placa" 
+                                   placeholder="🔍 Escriba el número de placa para buscar (ej. A-212, 222, o marca/modelo)..." 
+                                   class="form-control border-start-0 ps-0" 
+                                   nolabel="1"/>
+                        </div>
+                    </div>
+                    <button name="action_search_vehicles" 
+                            string="Buscar" 
+                            type="object" 
+                            class="btn btn-primary" 
+                            icon="fa-search"/>
+                    <button name="action_clear_filter" 
+                            string="Limpiar" 
+                            type="object" 
+                            class="btn btn-outline-secondary" 
+                            icon="fa-times" 
+                            invisible="not filtro_placa"/>
+                    <div class="ms-auto pe-2 text-muted fw-bold">
+                        <field name="total_vehiculos" class="d-inline"/> vehículo(s)
+                    </div>
+                </div>
+
+                <field name="line_ids" readonly="0">
+                    <list create="0" delete="0" edit="0">
+                        <field name="placa" string="Placa" decoration-bf="1" class="fw-bold text-primary"/>
+                        <field name="marca" string="Marca"/>
+                        <field name="modelo" string="Modelo"/>
+                        <field name="ano" string="Año"/>
+                        <field name="tipo_vehiculo" string="Tipo"/>
+                        <field name="chasis" string="Chasis" optional="show"/>
+                        <field name="motor" string="Motor" optional="show"/>
+                        <field name="vin" string="VIN" optional="hide"/>
+                        <button name="action_select_vehicle" 
+                                string="Seleccionar" 
+                                type="object" 
+                                class="btn btn-sm btn-primary" 
+                                icon="fa-check"/>
+                    </list>
+                </field>
+                <footer>
+                    <button string="Cerrar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

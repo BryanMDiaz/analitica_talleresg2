@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista Formulario de Factura: Información de Vehículo y Mecánico -->
+    <record id="view_move_form_inherit_analitica_talleres_vehiculo" model="ir.ui.view">
+        <field name="name">account.move.form.inherit.analitica.talleres.vehiculo</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="priority">250</field>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='vltk_additional_info']" position="after">
+                <page string="Información de Vehículo" name="page_informacion_vehiculo_analitica_factura">
+                    <div class="d-flex align-items-center justify-content-between mb-3 p-2 bg-light rounded border">
+                        <div class="d-flex align-items-center">
+                            <span class="fa fa-car fa-2x text-primary me-3"/>
+                            <div>
+                                <strong class="d-block text-dark">Vehículos Registrados del Cliente</strong>
+                                <small class="text-muted">Consulte los vehículos previos de este cliente o ingrese una placa para autocompletar.</small>
+                            </div>
+                        </div>
+                        <button name="action_open_vehicle_selector" 
+                                string="🚗 Ver / Seleccionar Vehículo del Cliente" 
+                                type="object" 
+                                class="btn btn-primary btn-sm fw-bold" 
+                                invisible="not partner_id"/>
+                    </div>
+                    <group name="group_vehiculo_mecanico">
+                        <group name="group_mecanico" string="Detalle Mecánico">
+                            <field name="mecanico_id" string="Mecánico" placeholder="Seleccione un empleado..."/>
+                            <field name="x_detalle_mecanico" string="Nombre Mecánico" readonly="1" invisible="not x_detalle_mecanico"/>
+                        </group>
+                        <group name="group_detalles_generales" string="Detalles Generales de Vehículo">
+                            <field name="x_marca_vehiculo" string="Marca"/>
+                            <field name="x_modelo_vehiculo" string="Modelo"/>
+                            <field name="x_ano_vehiculo" string="Año"/>
+                            <field name="x_tipo_vehiculo" string="Tipo de Vehículo"/>
+                        </group>
+                    </group>
+                    <group name="group_vehiculo_detalles">
+                        <group name="group_identificacion" string="Identificación de Vehículo">
+                            <field name="x_placa_vehiculo" string="Placa"/>
+                            <field name="x_chasis_vehiculo" string="Chasis"/>
+                            <field name="x_motor_vehiculo" string="Motor"/>
+                            <field name="x_vin" string="VIN"/>
+                            <field name="x_nota_vehiculo" string="Información Adicional / Nota"/>
+                        </group>
+                        <group name="group_estado" string="Estado de Vehículo">
+                            <field name="x_klms_vehiculo" string="Kilometraje"/>
+                            <field name="x_millas_vehiculo" string="Millas"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Vista Formulario de Factura: Campo Es Mano de Obra en Líneas de Factura -->
+    <record id="view_move_form_inherit_analitica_talleres_mo_line" model="ir.ui.view">
+        <field name="name">account.move.form.inherit.analitica.talleres.mo.line</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="priority">300</field>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='price_subtotal']" position="before">
+                <field name="es_mano_de_obra" string="M/O" optional="show"/>
+            </xpath>
+            <xpath expr="//field[@name='invoice_line_ids']/list/control/create[@name='add_section_control']" position="after">
+                <create name="add_section_mo" string="Sección: Mano de Obra" context="{'default_display_type': 'line_section', 'default_name': 'MANO DE OBRA'}"/>
+                <create name="add_section_rep" string="Sección: Repuestos" context="{'default_display_type': 'line_section', 'default_name': 'REPUESTOS'}"/>
+                <create name="add_section_ext" string="Sección: Trabajos Externos" context="{'default_display_type': 'line_section', 'default_name': 'TRABAJOS EXTERNOS'}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+

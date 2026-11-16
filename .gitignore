@@ -1,0 +1,18 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Configuración local y secretos
+.env
+.env.*
+!.env.example
+odoo.conf
+*.log
+
+# Editores y sistema
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

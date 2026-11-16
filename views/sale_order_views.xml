@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ===================================== -->
+    <!-- COTIZACIONES Y VENTAS (SALE.ORDER)    -->
+    <!-- ===================================== -->
+
+    <!-- Vista Lista de Cotizaciones y Ventas -->
+    <record id="view_taller_sale_order_list" model="ir.ui.view">
+        <field name="name">taller.sale.order.list</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <list string="Cotizaciones y Ventas" create="0" default_order="state asc, amount_total desc, date_order desc" sample="1" decoration-info="state in ('draft', 'sent')" decoration-muted="state == 'cancel'">
+                <field name="partner_id" string="Cliente"/>
+                <field name="name" string="Número" readonly="1" decoration-bf="1"/>
+                <field name="date_order" string="Fecha" widget="date"/>
+                <field name="user_id" string="Comercial" widget="many2one_avatar_user" optional="show"/>
+                <field name="amount_untaxed" string="Base Imponible" sum="Total Base" widget="monetary" decoration-bf="1" optional="hide"/>
+                <field name="amount_total" string="Total" sum="Total General" widget="monetary" decoration-bf="1"/>
+                <field name="state" string="Estado" widget="badge" decoration-info="state in ('draft', 'sent')" decoration-success="state == 'sale'" decoration-muted="state == 'cancel'"/>
+                <field name="invoice_status" string="Estado de Facturación" widget="badge" decoration-success="invoice_status == 'invoiced'" decoration-info="invoice_status == 'to invoice'" decoration-warning="invoice_status == 'upselling'" optional="show"/>
+                <field name="invoice_ids" string="Facturas Creadas" widget="many2many_tags" optional="show"/>
+                <field name="currency_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vista Gráfico para Cotizaciones y Ventas -->
+    <record id="view_taller_sale_order_graph" model="ir.ui.view">
+        <field name="name">taller.sale.order.graph</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <graph string="Análisis de Cotizaciones y Ventas" type="bar" sample="1">
+                <field name="date_order" interval="month"/>
+                <field name="state"/>
+                <field name="amount_total" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Vista Pivote para Cotizaciones y Ventas -->
+    <record id="view_taller_sale_order_pivot" model="ir.ui.view">
+        <field name="name">taller.sale.order.pivot</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <pivot string="Análisis de Cotizaciones y Ventas" sample="1">
+                <field name="partner_id" type="row"/>
+                <field name="state" type="col"/>
+                <field name="amount_total" type="measure"/>
+                <field name="amount_untaxed" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Vista Búsqueda / Filtros con agrupación por Estado por defecto -->
+    <record id="view_taller_sale_order_search" model="ir.ui.view">
+        <field name="name">taller.sale.order.search</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <search string="Filtros Cotizaciones y Ventas">
+                <field name="name" string="Número / Pedido"/>
+                <field name="partner_id" string="Cliente"/>
+                <field name="user_id" string="Comercial"/>
+                <field name="amount_total" string="Monto Total (≥)" operator="&gt;="/>
+                <field name="amount_total" string="Monto Total (≤)" operator="&lt;="/>
+                <filter string="Solo Taller Automotriz" name="filter_taller" domain="[('es_taller', '=', True)]"/>
+                <filter string="Solo MasterShop" name="filter_mastershop" domain="[('es_taller', '=', False)]"/>
+                <filter string="Todas las Órdenes (Taller + MasterShop)" name="filter_todas_ordenes" domain="['|', ('es_taller', '=', True), ('es_taller', '=', False)]"/>
+                <separator/>
+                <filter string="Presupuestos / Cotizaciones" name="filter_draft" domain="[('state', 'in', ('draft', 'sent'))]"/>
+                <filter string="Pedidos de Venta" name="filter_sale" domain="[('state', '=', 'sale')]"/>
+                <filter string="Cancelados" name="filter_cancel" domain="[('state', '=', 'cancel')]"/>
+                <separator/>
+                <filter string="Por Facturar" name="filter_to_invoice" domain="[('invoice_status', '=', 'to invoice')]"/>
+                <filter string="Totalmente Facturado" name="filter_invoiced" domain="[('invoice_status', '=', 'invoiced')]"/>
+                <filter string="Sin Facturar / Nada que facturar" name="filter_no_invoiced" domain="[('invoice_status', '=', 'no')]"/>
+                <separator/>
+                <filter string="Montos Grandes (≥ $1,000)" name="filter_amount_large" domain="[('amount_total', '&gt;=', 1000)]"/>
+                <filter string="Montos Mayores (≥ $500)" name="filter_amount_500" domain="[('amount_total', '&gt;=', 500)]"/>
+                <filter string="Montos Medianos ($100 - $500)" name="filter_amount_medium" domain="[('amount_total', '&gt;=', 100), ('amount_total', '&lt;', 500)]"/>
+                <filter string="Montos Menores (&lt; $500)" name="filter_amount_below_500" domain="[('amount_total', '&lt;', 500)]"/>
+                <filter string="Montos Menores (&lt; $100)" name="filter_amount_small" domain="[('amount_total', '&lt;', 100)]"/>
+                <separator/>
+                <group expand="0" string="Agrupar Por">
+                    <filter string="Cliente" name="group_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Estado" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Estado de Facturación" name="group_invoice_status" context="{'group_by': 'invoice_status'}"/>
+                    <filter string="Comercial" name="group_user" context="{'group_by': 'user_id'}"/>
+                    <filter string="Mes de Orden" name="group_date" context="{'group_by': 'date_order:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Acción de Ventana para Cotizaciones y Ventas -->
+    <record id="action_taller_sale_order" model="ir.actions.act_window">
+        <field name="name">Cotizaciones y Ventas</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">list,pivot,graph,form</field>
+        <field name="search_view_id" ref="view_taller_sale_order_search"/>
+        <field name="domain">[('company_id.name', 'ilike', 'GRUPO 2'), ('es_taller', '=', True)]</field>
+        <field name="context">{'search_default_group_partner': 1, 'search_default_group_state': 2, 'group_by': ['partner_id', 'state'], 'create': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No se encontraron cotizaciones ni pedidos de venta de taller.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_taller_sale_order_view_list" model="ir.actions.act_window.view">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_taller_sale_order_list"/>
+        <field name="act_window_id" ref="action_taller_sale_order"/>
+    </record>
+
+    <record id="action_taller_sale_order_view_pivot" model="ir.actions.act_window.view">
+        <field name="sequence" eval="2"/>
+        <field name="view_mode">pivot</field>
+        <field name="view_id" ref="view_taller_sale_order_pivot"/>
+        <field name="act_window_id" ref="action_taller_sale_order"/>
+    </record>
+
+    <record id="action_taller_sale_order_view_graph" model="ir.actions.act_window.view">
+        <field name="sequence" eval="3"/>
+        <field name="view_mode">graph</field>
+        <field name="view_id" ref="view_taller_sale_order_graph"/>
+        <field name="act_window_id" ref="action_taller_sale_order"/>
+    </record>
+
+    <!-- ===================================== -->
+    <!-- FORMULARIO: INFORMACIÓN DE VEHÍCULO   -->
+    <!-- ===================================== -->
+    <record id="view_order_form_inherit_analitica_talleres_vehiculo" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.analitica.talleres.vehiculo</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="priority">200</field>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Información Vehículo" name="page_informacion_vehiculo_analitica">
+                    <div class="d-flex align-items-center justify-content-between mb-3 p-2 bg-light rounded border">
+                        <div class="d-flex align-items-center">
+                            <span class="fa fa-car fa-2x text-primary me-3"/>
+                            <div>
+                                <strong class="d-block text-dark">Vehículos Registrados del Cliente</strong>
+                                <small class="text-muted">Consulte los vehículos previos de este cliente o ingrese una placa para autocompletar.</small>
+                            </div>
+                        </div>
+                        <button name="action_open_vehicle_selector" 
+                                string="🚗 Ver / Seleccionar Vehículo del Cliente" 
+                                type="object" 
+                                class="btn btn-primary btn-sm fw-bold" 
+                                invisible="not partner_id"/>
+                    </div>
+                    <group name="group_vehiculo_mecanico">
+                        <group name="group_mecanico" string="Detalle Mecánico">
+                            <field name="mecanico_id" string="Mecánico" placeholder="Seleccione un empleado..."/>
+                        </group>
+                        <group name="group_detalles_generales" string="Detalles Generales de Vehículo">
+                            <field name="x_marca_vehiculo"/>
+                            <field name="x_modelo_vehiculo"/>
+                            <field name="x_ano_vehiculo"/>
+                            <field name="x_tipo_vehiculo"/>
+                        </group>
+                    </group>
+                    <group name="group_vehiculo_detalles">
+                        <group name="group_identificacion" string="Identificación de Vehículo">
+                            <field name="x_placa_vehiculo"/>
+                            <field name="x_chasis_vehiculo"/>
+                            <field name="x_motor_vehiculo"/>
+                            <field name="x_vin"/>
+                            <field name="x_nota_vehiculo"/>
+                        </group>
+                        <group name="group_estado" string="Estado de Vehículo">
+                            <field name="x_klms_vehiculo"/>
+                            <field name="x_millas_vehiculo"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Vista Formulario de Cotización/Orden: Campo Es Mano de Obra en Líneas de Venta -->
+    <record id="view_order_form_inherit_analitica_talleres_mo_line" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.analitica.talleres.mo.line</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="priority">300</field>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='order_line']/list/field[@name='price_subtotal']" position="before">
+                <field name="es_mano_de_obra" string="M/O" optional="show"/>
+            </xpath>
+            <xpath expr="//field[@name='order_line']/list/control/create[@name='add_section_control']" position="after">
+                <create name="add_section_mo" string="Sección: Mano de Obra" context="{'default_display_type': 'line_section', 'default_name': 'MANO DE OBRA'}"/>
+                <create name="add_section_rep" string="Sección: Repuestos" context="{'default_display_type': 'line_section', 'default_name': 'REPUESTOS'}"/>
+                <create name="add_section_ext" string="Sección: Trabajos Externos" context="{'default_display_type': 'line_section', 'default_name': 'TRABAJOS EXTERNOS'}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+

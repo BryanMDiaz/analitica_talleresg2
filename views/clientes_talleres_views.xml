@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_analitica_talleres_clientes_list" model="ir.ui.view">
+        <field name="name">analitica.talleres.clientes.list</field>
+        <field name="model">res.partner</field>
+        <field name="arch" type="xml">
+            <list string="Clientes Talleres G2" create="0" edit="0" delete="0">
+                <field name="taller_currency_id" column_invisible="True"/>
+                <field name="name" string="Cliente"/>
+                <field name="mobile" string="Celular" optional="show"/>
+                <field name="email" string="Correo" optional="hide"/>
+                <field name="city" string="Ciudad / Depto." optional="show"/>
+                <field name="state_id" string="Departamento" optional="hide"/>
+                <field name="taller_last_purchase_date" string="Fecha Últ. Servicio"/>
+                <field name="taller_last_purchase_amount" string="Monto Últ. Servicio"/>
+                <field name="taller_total_purchase" string="Total Histórico"/>
+                <field name="taller_purchase_count" string="Cant. Facturas"/>
+                <field name="taller_average_ticket" string="Gasto Promedio"/>
+                <button name="action_view_taller_vehicles" type="object" string="Vehículos" icon="fa-car"/>
+                <button name="action_view_taller_invoices" type="object" string="Facturas" icon="fa-file-text-o"/>
+                <field name="taller_days_since_purchase" string="Días sin Servicio" widget="badge"
+                       decoration-success="taller_days_since_purchase &lt;= 30 and taller_last_purchase_date"
+                       decoration-warning="taller_days_since_purchase &gt; 30 and taller_days_since_purchase &lt;= 90 and taller_last_purchase_date"
+                       decoration-danger="taller_days_since_purchase &gt; 90 and taller_last_purchase_date"
+                       invisible="not taller_last_purchase_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_analitica_talleres_clientes_search" model="ir.ui.view">
+        <field name="name">analitica.talleres.clientes.search</field>
+        <field name="model">res.partner</field>
+        <field name="arch" type="xml">
+            <search string="Filtros Clientes Talleres G2">
+                <field name="name" string="Cliente"/>
+                <field name="mobile" string="Celular"/>
+                <field name="email" string="Correo"/>
+                <field name="city" string="Ciudad / Depto."/>
+
+                <separator/>
+                <filter string="Activos (Verde ≤ 30 días)" name="filter_active" domain="[('taller_days_since_purchase', '&lt;=', 30), ('taller_last_purchase_date', '!=', False)]"/>
+                <filter string="Medio Activos (Naranja 31-90 días)" name="filter_semi_active" domain="[('taller_days_since_purchase', '&gt;', 30), ('taller_days_since_purchase', '&lt;=', 90), ('taller_last_purchase_date', '!=', False)]"/>
+                <filter string="Inactivos (Rojo &gt; 90 días)" name="filter_inactive" domain="['|', ('taller_days_since_purchase', '&gt;', 90), ('taller_last_purchase_date', '=', False)]"/>
+                <separator/>
+                <filter string="Con Facturas" name="filter_with_invoices" domain="[('taller_purchase_count', '&gt;', 0)]"/>
+                <filter string="Sin Facturas" name="filter_without_invoices" domain="[('taller_purchase_count', '=', 0)]"/>
+                <separator/>
+                <filter string="Con Etiqueta Taller" name="filter_tagged" domain="[('category_id.name', 'ilike', 'Talleres / Cliente')]"/>
+                <filter string="Detectados por Servicios" name="filter_untagged" domain="['|', ('category_id.name', 'not ilike', 'Talleres / Cliente'), ('category_id', '=', False)]"/>
+
+                <separator/>
+                <!-- Departamentos de El Salvador -->
+                <filter string="📍 Ahuachapán" name="dept_ahuachapan" domain="[('city', 'ilike', 'Ahuachapán')]"/>
+                <filter string="📍 Cabañas" name="dept_cabanas" domain="[('city', 'ilike', 'Cabañas')]"/>
+                <filter string="📍 Chalatenango" name="dept_chalatenango" domain="[('city', 'ilike', 'Chalatenango')]"/>
+                <filter string="📍 Cuscatlán" name="dept_cuscatlan" domain="[('city', 'ilike', 'Cuscatlán')]"/>
+                <filter string="📍 La Libertad" name="dept_lalibertad" domain="[('city', 'ilike', 'La Libertad')]"/>
+                <filter string="📍 La Paz" name="dept_lapaz" domain="[('city', 'ilike', 'La Paz')]"/>
+                <filter string="📍 La Unión" name="dept_launion" domain="[('city', 'ilike', 'La Unión')]"/>
+                <filter string="📍 Morazán" name="dept_morazan" domain="[('city', 'ilike', 'Morazán')]"/>
+                <filter string="📍 San Miguel" name="dept_sanmiguel" domain="[('city', 'ilike', 'San Miguel')]"/>
+                <filter string="📍 San Salvador" name="dept_sansalvador" domain="[('city', 'ilike', 'San Salvador')]"/>
+                <filter string="📍 San Vicente" name="dept_sanvicente" domain="[('city', 'ilike', 'San Vicente')]"/>
+                <filter string="📍 Santa Ana" name="dept_santaana" domain="[('city', 'ilike', 'Santa Ana')]"/>
+                <filter string="📍 Sonsonate" name="dept_sonsonate" domain="[('city', 'ilike', 'Sonsonate')]"/>
+                <filter string="📍 Usulután" name="dept_usulutan" domain="[('city', 'ilike', 'Usulután')]"/>
+
+                <group expand="0" string="Agrupar Por">
+                    <filter string="Ciudad / Distrito" name="group_by_city" context="{'group_by': 'city'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_analitica_talleres_clientes" model="ir.actions.act_window">
+        <field name="name">Clientes Talleres G2</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_analitica_talleres_clientes_list"/>
+        <field name="search_view_id" ref="view_analitica_talleres_clientes_search"/>
+        <field name="domain">[('es_cliente_taller', '=', True), ('taller_purchase_count', '&gt;', 0), '|', ('company_id', '=', False), ('company_id.name', 'ilike', 'GRUPO 2')]</field>
+        <field name="context">{'create': False, 'edit': False, 'delete': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No se encontraron clientes de taller registrados para GRUPO 2 S.A. DE C.V.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_analitica_talleres_clientes_view_list" model="ir.actions.act_window.view">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_analitica_talleres_clientes_list"/>
+        <field name="act_window_id" ref="action_analitica_talleres_clientes"/>
+    </record>
+</odoo>

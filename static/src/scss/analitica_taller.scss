@@ -1,0 +1,79 @@
+/* Estilos para Analítica Talleres G2 */
+
+/* Totales en negrita en encabezados de grupo y pie de página de listas */
+.o_list_table {
+    tbody > tr.o_group_header > td {
+        font-weight: bold !important;
+    }
+    tfoot > tr > td {
+        font-weight: bold !important;
+    }
+}
+
+/* Semáforo y alineación de días sin comprar para Clientes Talleres G2 */
+.o_list_table {
+    th[data-name="taller_days_since_purchase"],
+    td[name="taller_days_since_purchase"] {
+        text-align: center !important;
+    }
+
+    th[data-name="taller_days_since_purchase"] {
+        text-align: center !important;
+
+        > div,
+        .d-flex {
+            justify-content: center !important;
+            align-items: center !important;
+            text-align: center !important;
+            width: 100% !important;
+        }
+
+        span,
+        .o_list_number_th {
+            text-align: center !important;
+            flex-grow: 0 !important;
+            margin: 0 !important;
+        }
+
+        .o_list_header_label_spacer {
+            display: none !important;
+        }
+
+        .o_list_sortable_caret {
+            margin-left: 4px !important;
+        }
+    }
+}
+
+
+.o_list_view td[name="taller_days_since_purchase"] span {
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    border-radius: 50rem;
+    min-width: 40px;
+    letter-spacing: 0.02em;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* 🟢 Verde: Activo (<= 30 días) */
+.o_list_view td[name="taller_days_since_purchase"].text-success span {
+    background-color: #28a745 !important;
+    color: #ffffff !important;
+}
+
+/* 🟠 Naranja: Medio Activo (31 a 90 días) */
+.o_list_view td[name="taller_days_since_purchase"].text-warning span {
+    background-color: #fd7e14 !important;
+    color: #ffffff !important;
+}
+
+/* 🔴 Rojo: Inactivo (> 90 días o sin compras recientes) */
+.o_list_view td[name="taller_days_since_purchase"].text-danger span {
+    background-color: #dc3545 !important;
+    color: #ffffff !important;
+}
+

@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista Lista: Bitácora de Servicios por Vehículo -->
+    <record id="view_taller_bitacora_vehiculo_list" model="ir.ui.view">
+        <field name="name">taller.bitacora.vehiculo.list</field>
+        <field name="model">taller.bitacora.vehiculo</field>
+        <field name="arch" type="xml">
+            <list string="Bitácora de Servicios por Vehículo" create="0" edit="0" delete="0">
+                <field name="currency_id" column_invisible="True"/>
+                <field name="placa" string="Placa" decoration-bf="1"/>
+                <field name="partner_id" string="Propietario / Cliente"/>
+                <field name="marca" string="Marca"/>
+                <button name="action_view_latest_service_detail" type="object" string="Ver Servicio" icon="fa-wrench" title="Ver detalle del último trabajo realizado"/>
+                <field name="fecha_ultimo_servicio" string="Fecha Últ. Servicio"/>
+                <field name="monto_ultima_factura" string="Monto Últ. Factura"/>
+                <field name="monto_mano_obra" string="M/O Últ. Factura" decoration-bf="1"/>
+                <field name="monto_repuestos" string="Repuestos Últ. Factura" optional="hide"/>
+                <field name="total_mano_obra" string="Total Mano de Obra" decoration-bf="1" optional="show" sum="Total Mano de Obra"/>
+                <field name="total_repuestos" string="Total Repuestos" optional="show" sum="Total Repuestos"/>
+                <field name="total_facturado" string="Total Histórico (General)" optional="show" sum="Total General"/>
+                <field name="cantidad_facturas" string="Cant. Facturas" optional="show"/>
+                <field name="cantidad_ordenes" string="Cant. Servicios" optional="hide"/>
+                <field name="mecanico_id" string="Mecánico Asignado"/>
+                <button name="action_view_invoices" type="object" string="Facturas" icon="fa-file-text-o" invisible="cantidad_facturas == 0"/>
+                <field name="dias_sin_servicio" string="Días sin Servicio" widget="badge"
+                       decoration-success="dias_sin_servicio &lt;= 30 and fecha_ultimo_servicio"
+                       decoration-warning="dias_sin_servicio &gt; 30 and dias_sin_servicio &lt;= 90 and fecha_ultimo_servicio"
+                       decoration-danger="dias_sin_servicio &gt; 90 and fecha_ultimo_servicio"
+                       invisible="not fecha_ultimo_servicio"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vista Modal Pop-up: Detalle del Último Servicio -->
+    <record id="view_taller_bitacora_servicio_modal" model="ir.ui.view">
+        <field name="name">taller.bitacora.servicio.modal</field>
+        <field name="model">taller.bitacora.vehiculo</field>
+        <field name="priority">500</field>
+        <field name="arch" type="xml">
+            <form string="Detalle del Último Servicio" create="0" edit="0" delete="0">
+                <sheet>
+                    <div class="alert alert-info py-2 px-3 mb-3" role="alert" style="border-left: 4px solid #017e84;">
+                        <h4 class="mb-1 d-flex align-items-center">
+                            <i class="fa fa-car me-2" title="Vehículo"/> <strong>Vehículo: <field name="placa" readonly="1" class="oe_inline"/></strong>
+                            <span class="ms-3 text-muted" style="font-size: 0.95rem;">(<field name="marca" readonly="1" class="oe_inline"/>)</span>
+                        </h4>
+                        <div>
+                            <strong>Propietario / Cliente:</strong> <field name="partner_id" readonly="1" class="oe_inline"/>
+                        </div>
+                    </div>
+
+                    <group>
+                        <group string="Datos del Servicio">
+                            <field name="fecha_ultimo_servicio" readonly="1" string="Fecha Realizado"/>
+                            <field name="latest_invoice_id" readonly="1" string="Factura Emitida" invisible="not latest_invoice_id"/>
+                            <field name="monto_ultima_factura" readonly="1" string="Total Facturado (General)" invisible="not latest_invoice_id"/>
+                            <field name="latest_order_id" readonly="1" string="Presupuesto / Orden" invisible="latest_invoice_id"/>
+                            <field name="monto_ultimo_presupuesto" readonly="1" string="Monto Cotizado (Sin Facturar)" invisible="latest_invoice_id"/>
+                            <field name="monto_mano_obra" readonly="1" string="🛠️ Mano de Obra del Servicio" decoration-bf="1"/>
+                            <field name="monto_repuestos" readonly="1" string="🔩 Repuestos del Servicio"/>
+                            <field name="total_mano_obra" readonly="1" string="Total Mano de Obra Histórica"/>
+                            <field name="total_repuestos" readonly="1" string="Total Repuestos Histórico"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                        <group string="Responsable de Taller">
+                            <field name="mecanico_id" readonly="1" string="Mecánico Asignado"/>
+                            <field name="mecanico_nombre" readonly="1" invisible="not mecanico_nombre" string="Nombre Mecánico"/>
+                            <field name="dias_sin_servicio" readonly="1" widget="badge"
+                                   decoration-success="dias_sin_servicio &lt;= 30 and fecha_ultimo_servicio"
+                                   decoration-warning="dias_sin_servicio &gt; 30 and dias_sin_servicio &lt;= 90 and fecha_ultimo_servicio"
+                                   decoration-danger="dias_sin_servicio &gt; 90 and fecha_ultimo_servicio"
+                                   invisible="not fecha_ultimo_servicio"/>
+                        </group>
+                    </group>
+
+                    <separator string="🛠️ Mano de Obra y Trabajos Realizados"/>
+                    <div class="p-3 bg-light rounded border mb-3" style="font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap;">
+                        <field name="ultimo_servicio_realizado" readonly="1" nolabel="1"/>
+                    </div>
+                </sheet>
+                <footer>
+                    <button name="action_open_latest_invoice" type="object" string="Ver Factura Completa" class="btn-primary" icon="fa-file-text-o" invisible="not latest_invoice_id"/>
+                    <button name="action_open_latest_order" type="object" string="Ver Cotización / Orden" class="btn-primary" icon="fa-wrench" invisible="latest_invoice_id or not latest_order_id"/>
+                    <button special="cancel" string="Cerrar" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista Formulario Principal: Detalle de Vehículo y Servicios -->
+    <record id="view_taller_bitacora_vehiculo_form" model="ir.ui.view">
+        <field name="name">taller.bitacora.vehiculo.form</field>
+        <field name="model">taller.bitacora.vehiculo</field>
+        <field name="arch" type="xml">
+            <form string="Vehículo - Bitácora de Servicios" create="0" edit="0" delete="0">
+                <header>
+                    <button name="action_view_latest_service_detail" type="object" string="Ver Detalle de Último Servicio" class="oe_highlight" icon="fa-wrench"/>
+                    <button name="action_view_invoices" type="object" string="Ver Facturas" icon="fa-file-text-o" invisible="cantidad_facturas == 0"/>
+                    <button name="action_view_orders" type="object" string="Ver Órdenes de Trabajo" icon="fa-wrench" invisible="cantidad_ordenes == 0"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_invoices" type="object" class="oe_stat_button" icon="fa-file-text-o" invisible="cantidad_facturas == 0">
+                            <field name="cantidad_facturas" widget="statinfo" string="Facturas"/>
+                        </button>
+                        <button name="action_view_orders" type="object" class="oe_stat_button" icon="fa-wrench" invisible="cantidad_ordenes == 0">
+                            <field name="cantidad_ordenes" widget="statinfo" string="Servicios/Órdenes"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="placa" string="Placa del Vehículo"/>
+                        <h1>
+                            <field name="placa" readonly="1"/>
+                        </h1>
+                        <h3>
+                            <field name="partner_id" readonly="1" string="Propietario"/>
+                        </h3>
+                    </div>
+                    <group string="Último Trabajo Realizado (Mano de Obra Deducida)">
+                        <field name="ultimo_servicio_realizado" readonly="1" nolabel="1"/>
+                    </group>
+                    <group>
+                        <group string="Identificación del Vehículo">
+                            <field name="marca" readonly="1"/>
+                            <field name="modelo" readonly="1"/>
+                            <field name="ano" readonly="1"/>
+                            <field name="tipo_vehiculo" readonly="1"/>
+                            <field name="vin" readonly="1"/>
+                            <field name="motor" readonly="1"/>
+                            <field name="chasis" readonly="1"/>
+                            <field name="kilometraje" readonly="1"/>
+                        </group>
+                        <group string="Detalle del Último Servicio y Mecánico">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="fecha_ultimo_servicio" readonly="1"/>
+                            <field name="latest_invoice_id" readonly="1" invisible="not latest_invoice_id"/>
+                            <field name="monto_ultima_factura" readonly="1" invisible="not latest_invoice_id"/>
+                            <field name="latest_order_id" readonly="1" invisible="latest_invoice_id"/>
+                            <field name="monto_ultimo_presupuesto" readonly="1" string="Monto Cotizado (Sin Facturar)" invisible="latest_invoice_id"/>
+                            <field name="monto_mano_obra" readonly="1" string="M/O Último Servicio"/>
+                            <field name="monto_repuestos" readonly="1" string="Repuestos Último Servicio"/>
+                            <field name="total_mano_obra" readonly="1" string="Total Histórico Mano de Obra"/>
+                            <field name="total_repuestos" readonly="1" string="Total Histórico Repuestos"/>
+                            <field name="total_facturado" readonly="1" string="Total Histórico (General)"/>
+                            <field name="mecanico_id" readonly="1"/>
+                            <field name="mecanico_nombre" readonly="1" invisible="not mecanico_nombre"/>
+                            <field name="dias_sin_servicio" readonly="1" widget="badge"
+                                   decoration-success="dias_sin_servicio &lt;= 30 and fecha_ultimo_servicio"
+                                   decoration-warning="dias_sin_servicio &gt; 30 and dias_sin_servicio &lt;= 90 and fecha_ultimo_servicio"
+                                   decoration-danger="dias_sin_servicio &gt; 90 and fecha_ultimo_servicio"
+                                   invisible="not fecha_ultimo_servicio"/>
+                            <field name="company_id" readonly="1" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista Gráfico: Asignaciones y Mano de Obra por Mecánico -->
+    <record id="view_taller_bitacora_vehiculo_graph" model="ir.ui.view">
+        <field name="name">taller.bitacora.vehiculo.graph</field>
+        <field name="model">taller.bitacora.vehiculo</field>
+        <field name="arch" type="xml">
+            <graph string="Mecánicos por Asignaciones y Mano de Obra" type="bar" sample="1">
+                <field name="mecanico_id"/>
+                <field name="total_mano_obra" type="measure"/>
+                <field name="total_repuestos" type="measure"/>
+                <field name="total_facturado" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Vista Pivote: Análisis de Mecánicos y Montos -->
+    <record id="view_taller_bitacora_vehiculo_pivot" model="ir.ui.view">
+        <field name="name">taller.bitacora.vehiculo.pivot</field>
+        <field name="model">taller.bitacora.vehiculo</field>
+        <field name="arch" type="xml">
+            <pivot string="Análisis de Servicios y Mecánicos" sample="1">
+                <field name="mecanico_id" type="row"/>
+                <field name="total_mano_obra" type="measure"/>
+                <field name="total_repuestos" type="measure"/>
+                <field name="total_facturado" type="measure"/>
+                <field name="cantidad_facturas" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Vista Búsqueda y Filtros -->
+    <record id="view_taller_bitacora_vehiculo_search" model="ir.ui.view">
+        <field name="name">taller.bitacora.vehiculo.search</field>
+        <field name="model">taller.bitacora.vehiculo</field>
+        <field name="arch" type="xml">
+            <search string="Buscar en Bitácora de Servicios">
+                <field name="placa" string="Placa" filter_domain="['|', ('placa', 'ilike', self), ('clean_plate', 'ilike', self)]"/>
+                <field name="partner_id" string="Propietario / Cliente"/>
+                <field name="marca" string="Marca"/>
+                <field name="ultimo_servicio_realizado" string="Trabajo / Mano de Obra"/>
+                <field name="mecanico_id" string="Mecánico Asignado"/>
+
+                <separator/>
+                <filter string="Con Facturas Emitidas" name="filter_with_invoices" domain="[('cantidad_facturas', '&gt;', 0)]"/>
+                <filter string="Todos los Vehículos" name="filter_all" domain="[]"/>
+                <separator/>
+                <filter string="Con Mecánico Asignado" name="filter_with_mecanico" domain="['|', ('mecanico_id', '!=', False), ('mecanico_nombre', '!=', False)]"/>
+                <filter string="Solo Etiqueta 'Talleres / Cliente'" name="filter_tag_taller" domain="[('partner_id.category_id.name', 'ilike', 'Talleres / Cliente')]"/>
+
+                <separator/>
+                <filter string="Mayor Mano de Obra" name="sort_labor_desc" domain="[]" context="{'order': 'total_mano_obra desc'}"/>
+                <filter string="Mayor Repuestos" name="sort_parts_desc" domain="[]" context="{'order': 'total_repuestos desc'}"/>
+                <filter string="Mayor Total Facturado" name="sort_total_desc" domain="[]" context="{'order': 'total_facturado desc'}"/>
+
+                <separator/>
+                <filter string="Activos (≤ 30 días)" name="filter_active" domain="[('dias_sin_servicio', '&lt;=', 30), ('fecha_ultimo_servicio', '!=', False)]"/>
+                <filter string="Medio Activos (31-90 días)" name="filter_semi_active" domain="[('dias_sin_servicio', '&gt;', 30), ('dias_sin_servicio', '&lt;=', 90), ('fecha_ultimo_servicio', '!=', False)]"/>
+                <filter string="Inactivos (> 90 días)" name="filter_inactive" domain="['|', ('dias_sin_servicio', '&gt;', 90), ('fecha_ultimo_servicio', '=', False)]"/>
+
+                <group expand="0" string="Agrupar Por">
+                    <filter string="Mecánico Asignado" name="group_by_mecanico" context="{'group_by': 'mecanico_id'}"/>
+                    <filter string="Propietario / Cliente" name="group_by_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Marca" name="group_by_marca" context="{'group_by': 'marca'}"/>
+                    <filter string="Mes de Último Servicio" name="group_by_fecha" context="{'group_by': 'fecha_ultimo_servicio:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Acción de Ventana -->
+    <record id="action_taller_bitacora_vehiculo" model="ir.actions.act_window">
+        <field name="name">Bitácora de Servicios por Vehículo</field>
+        <field name="res_model">taller.bitacora.vehiculo</field>
+        <field name="view_mode">list,pivot,graph,form</field>
+        <field name="view_id" ref="view_taller_bitacora_vehiculo_list"/>
+        <field name="search_view_id" ref="view_taller_bitacora_vehiculo_search"/>
+        <field name="domain">['|', ('company_id', '=', False), ('company_id.name', 'ilike', 'GRUPO 2')]</field>
+        <field name="context">{'search_default_filter_with_invoices': 1, 'create': False, 'edit': False, 'delete': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No se encontraron servicios ni vehículos registrados para GRUPO 2 S.A. DE C.V.
+            </p>
+        </field>
+    </record>
+
+    <!-- Vista de lista explícita -->
+    <record id="action_taller_bitacora_vehiculo_view_list" model="ir.actions.act_window.view">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_taller_bitacora_vehiculo_list"/>
+        <field name="act_window_id" ref="action_taller_bitacora_vehiculo"/>
+    </record>
+
+    <!-- Vista pivote explícita -->
+    <record id="action_taller_bitacora_vehiculo_view_pivot" model="ir.actions.act_window.view">
+        <field name="sequence" eval="2"/>
+        <field name="view_mode">pivot</field>
+        <field name="view_id" ref="view_taller_bitacora_vehiculo_pivot"/>
+        <field name="act_window_id" ref="action_taller_bitacora_vehiculo"/>
+    </record>
+
+    <!-- Vista gráfica explícita -->
+    <record id="action_taller_bitacora_vehiculo_view_graph" model="ir.actions.act_window.view">
+        <field name="sequence" eval="3"/>
+        <field name="view_mode">graph</field>
+        <field name="view_id" ref="view_taller_bitacora_vehiculo_graph"/>
+        <field name="act_window_id" ref="action_taller_bitacora_vehiculo"/>
+    </record>
+
+    <!-- Vista de formulario explícita -->
+    <record id="action_taller_bitacora_vehiculo_view_form" model="ir.actions.act_window.view">
+        <field name="sequence" eval="4"/>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_taller_bitacora_vehiculo_form"/>
+        <field name="act_window_id" ref="action_taller_bitacora_vehiculo"/>
+    </record>
+</odoo>

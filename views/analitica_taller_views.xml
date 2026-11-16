@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista Lista -->
+    <record id="view_analitica_taller_list" model="ir.ui.view">
+        <field name="name">analitica.taller.list</field>
+        <field name="model">analitica.taller</field>
+        <field name="arch" type="xml">
+            <list string="Control de Costos y Rentabilidad"
+                  decoration-info="state == 'draft'"
+                  decoration-warning="state == 'in_progress'"
+                  decoration-success="state == 'done'"
+                  decoration-muted="state == 'cancel'">
+                <field name="name" string="Código" decoration-bf="1"/>
+                <field name="taller_nombre" string="Área / Centro de Costo"/>
+                <field name="analytic_account_id" string="Cuenta Analítica"/>
+                <field name="responsable_id" string="Responsable" widget="many2one_avatar_user"/>
+                <field name="fecha_inicio" string="Inicio"/>
+                <field name="fecha_fin" string="Fin" optional="show"/>
+                <field name="costo_estimado" string="Costo Proyectado" optional="hide"/>
+                <field name="costo_real" string="Costo Real" sum="Total Costos" decoration-danger="costo_real &gt; 0"/>
+                <field name="ingreso_real" string="Ingreso Real" sum="Total Ingresos" decoration-success="ingreso_real &gt; 0"/>
+                <field name="margen_real" string="Margen Operativo" sum="Margen Total" decoration-bf="1"/>
+                <field name="porcentaje_margen" string="% Margen" widget="percentage" optional="show"
+                       decoration-success="porcentaje_margen &gt;= 0.3"
+                       decoration-warning="porcentaje_margen &gt; 0 and porcentaje_margen &lt; 0.3"
+                       decoration-danger="porcentaje_margen &lt;= 0"/>
+                <field name="state" string="Estado" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'in_progress'"
+                       decoration-success="state == 'done'"
+                       decoration-danger="state == 'cancel'"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vista Gráfico -->
+    <record id="view_analitica_taller_graph" model="ir.ui.view">
+        <field name="name">analitica.taller.graph</field>
+        <field name="model">analitica.taller</field>
+        <field name="arch" type="xml">
+            <graph string="Márgenes y Rentabilidad de Talleres" type="bar" sample="1">
+                <field name="taller_nombre"/>
+                <field name="ingreso_real" type="measure"/>
+                <field name="costo_real" type="measure"/>
+                <field name="margen_real" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Vista Pivote -->
+    <record id="view_analitica_taller_pivot" model="ir.ui.view">
+        <field name="name">analitica.taller.pivot</field>
+        <field name="model">analitica.taller</field>
+        <field name="arch" type="xml">
+            <pivot string="Análisis Financiero de Costos y Márgenes" sample="1">
+                <field name="taller_nombre" type="row"/>
+                <field name="state" type="col"/>
+                <field name="costo_real" type="measure"/>
+                <field name="ingreso_real" type="measure"/>
+                <field name="margen_real" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Vista Formulario -->
+    <record id="view_analitica_taller_form" model="ir.ui.view">
+        <field name="name">analitica.taller.form</field>
+        <field name="model">analitica.taller</field>
+        <field name="arch" type="xml">
+            <form string="Centro de Costos y Rentabilidad">
+                <header>
+                    <button name="action_in_progress"
+                            string="Iniciar Proceso"
+                            type="object"
+                            class="oe_highlight"
+                            invisible="state != 'draft'"/>
+                    <button name="action_done"
+                            string="Finalizar"
+                            type="object"
+                            class="oe_highlight"
+                            invisible="state != 'in_progress'"/>
+                    <button name="action_recalculate_metrics"
+                            string="🔄 Sincronizar desde Analítica"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="not analytic_account_id"
+                            title="Recalcular ingresos y costos automáticamente desde los apuntes contables analíticos"/>
+                    <button name="action_create_analytic_account"
+                            string="⚡ Crear Cuenta Analítica"
+                            type="object"
+                            class="btn-info"
+                            invisible="analytic_account_id"
+                            title="Generar automáticamente la cuenta analítica de Odoo para este centro de costo"/>
+                    <button name="action_draft"
+                            string="Regresar a Borrador"
+                            type="object"
+                            invisible="state not in ('in_progress', 'cancel')"/>
+                    <button name="action_cancel"
+                            string="Cancelar"
+                            type="object"
+                            invisible="state in ('done', 'cancel')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,in_progress,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_analytic_lines"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-usd"
+                                invisible="not analytic_account_id">
+                            <field name="analytic_line_count" widget="statinfo" string="Apuntes Analíticos"/>
+                        </button>
+                    </div>
+
+                    <div class="oe_title">
+                        <label for="name" string="Referencia / Código"/>
+                        <h1>
+                            <field name="name" placeholder="Ej. ATG2-0001"/>
+                        </h1>
+                        <label for="taller_nombre" string="Nombre del Área / Centro de Costos"/>
+                        <h2>
+                            <field name="taller_nombre" placeholder="Ej. Taller Mecánico Principal G2"/>
+                        </h2>
+                    </div>
+
+                    <group>
+                        <group name="info_general" string="Configuración Analítica">
+                            <field name="analytic_account_id" options="{'no_create_edit': False}"/>
+                            <field name="responsable_id" widget="many2one_avatar_user"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                        <group name="fechas" string="Periodo Operativo">
+                            <field name="fecha_inicio"/>
+                            <field name="fecha_fin"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page name="analitica_costos" string="Métricas Financieras y Rentabilidad">
+                            <div class="alert alert-info py-2 px-3 mb-3" role="alert" style="border-left: 4px solid #017e84;">
+                                💡 <strong>Cálculo Automático:</strong> Si selecciona una <em>Cuenta Analítica</em>, Odoo calcula automáticamente los Ingresos Reales (facturas de clientes) y Costos Reales (compras y gastos) a partir de los apuntes contables analíticos.
+                            </div>
+                            <group>
+                                <group string="Costos y Egresos">
+                                    <field name="costo_estimado" widget="monetary"/>
+                                    <field name="costo_real" widget="monetary" decoration-danger="costo_real &gt; 0"/>
+                                </group>
+                                <group string="Facturación e Ingresos">
+                                    <field name="ingreso_estimado" widget="monetary"/>
+                                    <field name="ingreso_real" widget="monetary" decoration-success="ingreso_real &gt; 0"/>
+                                </group>
+                            </group>
+                            <group string="Rentabilidad y Margen">
+                                <group>
+                                    <field name="margen_real" widget="monetary" decoration-bf="1"/>
+                                    <field name="porcentaje_margen" widget="percentage"
+                                           decoration-success="porcentaje_margen &gt;= 0.3"
+                                           decoration-warning="porcentaje_margen &gt; 0 and porcentaje_margen &lt; 0.3"
+                                           decoration-danger="porcentaje_margen &lt;= 0"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page name="notas" string="Notas y Observaciones">
+                            <field name="notas" placeholder="Detalles u observaciones técnicas del taller..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista Búsqueda -->
+    <record id="view_analitica_taller_search" model="ir.ui.view">
+        <field name="name">analitica.taller.search</field>
+        <field name="model">analitica.taller</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Registros de Taller">
+                <field name="name" string="Código / Referencia"/>
+                <field name="taller_nombre" string="Área / Centro de Costos"/>
+                <field name="analytic_account_id" string="Cuenta Analítica"/>
+                <field name="responsable_id" string="Responsable"/>
+                <separator/>
+                <filter string="Borradores" name="filter_draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="En Progreso" name="filter_in_progress" domain="[('state', '=', 'in_progress')]"/>
+                <filter string="Finalizados" name="filter_done" domain="[('state', '=', 'done')]"/>
+                <separator/>
+                <filter string="Con Margen Positivo" name="filter_positive_margin" domain="[('margen_real', '&gt;', 0)]"/>
+                <filter string="Con Margen Negativo / Pérdida" name="filter_negative_margin" domain="[('margen_real', '&lt;', 0)]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter string="Estado" name="group_by_state" context="{'group_by': 'state'}"/>
+                    <filter string="Responsable" name="group_by_responsable" context="{'group_by': 'responsable_id'}"/>
+                    <filter string="Cuenta Analítica" name="group_by_analytic_account" context="{'group_by': 'analytic_account_id'}"/>
+                    <filter string="Fecha de Inicio" name="group_by_fecha" context="{'group_by': 'fecha_inicio:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Acción de Ventana -->
+    <record id="action_analitica_taller" model="ir.actions.act_window">
+        <field name="name">Control de Costos y Rentabilidad</field>
+        <field name="res_model">analitica.taller</field>
+        <field name="view_mode">list,pivot,graph,form</field>
+        <field name="search_view_id" ref="view_analitica_taller_search"/>
+        <field name="domain">[('company_id.name', 'ilike', 'GRUPO 2')]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crea el primer centro de costos o proyecto para Talleres G2
+            </p>
+            <p>
+                Gestiona y analiza automáticamente los costos, ingresos y márgenes operativos de tus talleres con integración contable analítica.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_analitica_taller_view_list" model="ir.actions.act_window.view">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_analitica_taller_list"/>
+        <field name="act_window_id" ref="action_analitica_taller"/>
+    </record>
+
+    <record id="action_analitica_taller_view_pivot" model="ir.actions.act_window.view">
+        <field name="sequence" eval="2"/>
+        <field name="view_mode">pivot</field>
+        <field name="view_id" ref="view_analitica_taller_pivot"/>
+        <field name="act_window_id" ref="action_analitica_taller"/>
+    </record>
+
+    <record id="action_analitica_taller_view_graph" model="ir.actions.act_window.view">
+        <field name="sequence" eval="3"/>
+        <field name="view_mode">graph</field>
+        <field name="view_id" ref="view_analitica_taller_graph"/>
+        <field name="act_window_id" ref="action_analitica_taller"/>
+    </record>
+
+    <record id="action_analitica_taller_view_form" model="ir.actions.act_window.view">
+        <field name="sequence" eval="4"/>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_analitica_taller_form"/>
+        <field name="act_window_id" ref="action_analitica_taller"/>
+    </record>
+</odoo>

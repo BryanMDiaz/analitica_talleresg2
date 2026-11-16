@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Menú Principal Raíz -->
+    <menuitem id="menu_analitica_talleres_root"
+              name="Analítica Talleres G2"
+              web_icon="analitica_talleresg2,static/description/icon.png"
+              action="action_taller_dashboard"
+              sequence="45"/>
+
+    <!-- Submenú 1: Tablero de Control Ejecutivo (Dashboard KPI) -->
+    <menuitem id="menu_analitica_talleres_dashboard"
+              name="Tablero de Control"
+              parent="menu_analitica_talleres_root"
+              action="action_taller_dashboard"
+              sequence="1"/>
+
+    <!-- Submenú 2: Bitácora de Servicios por Vehículo -->
+    <menuitem id="menu_analitica_talleres_bitacora"
+              name="Bitácora de Servicios"
+              parent="menu_analitica_talleres_root"
+              action="action_taller_bitacora_vehiculo"
+              sequence="5"/>
+
+    <!-- Submenú 3: Clientes Talleres G2 -->
+    <menuitem id="menu_analitica_talleres_clientes"
+              name="Clientes Talleres G2"
+              parent="menu_analitica_talleres_root"
+              action="action_analitica_talleres_clientes"
+              sequence="10"/>
+
+    <!-- Submenú 4: Cotizaciones y Ventas -->
+    <menuitem id="menu_analitica_talleres_quotations"
+              name="Cotizaciones y Ventas"
+              parent="menu_analitica_talleres_root"
+              action="action_taller_sale_order"
+              sequence="15"/>
+
+    <!-- Submenú 5: Reportes de Ventas -->
+    <menuitem id="menu_analitica_talleres_analitica"
+              name="Reportes de Ventas"
+              parent="menu_analitica_talleres_root"
+              action="action_taller_reportes_ventas"
+              sequence="20"/>
+</odoo>
